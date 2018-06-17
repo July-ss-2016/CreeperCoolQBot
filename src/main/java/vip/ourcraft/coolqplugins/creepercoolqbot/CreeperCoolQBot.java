@@ -4,7 +4,8 @@ import com.sobte.cqp.jcq.event.JcqAppAbstract;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import vip.ourcraft.coolqplugins.creepercoolqbot.entities.AntiSpamer;
-import vip.ourcraft.coolqplugins.creepercoolqbot.entities.QqGroup;
+import vip.ourcraft.coolqplugins.creepercoolqbot.entities.GroupNickChecker;
+import vip.ourcraft.coolqplugins.creepercoolqbot.entities.QQGroup;
 import vip.ourcraft.coolqplugins.creepercoolqbot.entities.RegexFilter;
 
 import java.io.File;
@@ -37,42 +38,71 @@ public class CreeperCoolQBot extends JcqAppAbstract {
             }
         }
 
-        HashMap<Long, QqGroup> groups = new HashMap<>();
+        HashMap<Long, QQGroup> groups = new HashMap<>();
         Config config = ConfigFactory.parseFile(file);
 
         settings.setMsgPrefix(config.getString("msg_prefix"));
-        settings.setOwnerQq(config.getLong("owner_qq"));
+        settings.setOwnerQQ(config.getLong("owner_qq"));
 
+        // 得到所有群的根配置
         for (Config groupConfig : config.getConfigList("qq_groups")) {
-            Config antiSpamConfig = groupConfig.getConfig("anti_spam");
-            List<? extends Config> regexFiltersConfigs = groupConfig.getConfigList("regex_filters");
-            QqGroup group = new QqGroup();
-            AntiSpamer antiSpamer = new AntiSpamer();
-            List<RegexFilter> regexFilters = new ArrayList<>();
+            Config antiSpamerConfig = groupConfig.getConfig("anti_spamer"); // 反刷屏根配置
+            List<? extends Config> regexFiltersConfigs = groupConfig.getConfigList("regex_filters"); // 正则筛选器根配置列表
+            Config groupNickCheckerConfig = groupConfig.getConfig("group_nick_checker"); // 群昵称根配置
 
-            for (Config filterConfig : regexFiltersConfigs) {
-                RegexFilter setting = new RegexFilter();
+            QQGroup group = new QQGroup();
+            AntiSpamer antiSpamer = null;
+            GroupNickChecker groupNickChecker = null;
+            List<RegexFilter> regexFilters = null;
 
-                setting.setRegex(filterConfig.getString("regex"));
-                setting.setWithdraw(filterConfig.getBoolean("withdraw"));
-                setting.setMuteMinutes(filterConfig.getInt("mute_minutes"));
-                setting.setPunishMsg(filterConfig.getString("punish_msg"));
+            // 存储正则筛选器到list中
+            for (Config regexFilterConfig : regexFiltersConfigs) {
+                if (!regexFilterConfig.isEmpty()) {
+                    RegexFilter regexFilter = new RegexFilter();
 
-                regexFilters.add(setting);
+                    regexFilter.setRegex(regexFilterConfig.getString("regex"));
+                    regexFilter.setWithdraw(regexFilterConfig.getBoolean("withdraw"));
+                    regexFilter.setMuteMinutes(regexFilterConfig.getInt("mute_minutes"));
+                    regexFilter.setPunishMsg(regexFilterConfig.getString("punish_msg"));
+
+                    if (regexFilters == null) {
+                        regexFilters = new ArrayList<>();
+                    }
+
+                    regexFilters.add(regexFilter);
+                }
             }
 
-            antiSpamer.setIntervalThreshold(antiSpamConfig.getInt("interval_threshold"));
-            antiSpamer.setMuteVL(antiSpamConfig.getInt("mute_vl"));
-            antiSpamer.setMuteMinutes(antiSpamConfig.getInt("mute_minutes"));
-            antiSpamer.setMuteMsg(antiSpamConfig.getString("mute_msg"));
+            // 设置反刷屏
+            if (!antiSpamerConfig.isEmpty()) {
+                antiSpamer = new AntiSpamer();
 
-            group.setGroupId(groupConfig.getLong("group_id"));
+                antiSpamer.setIntervalThreshold(antiSpamerConfig.getInt("interval_threshold"));
+                antiSpamer.setMuteVL(antiSpamerConfig.getInt("mute_vl"));
+                antiSpamer.setMuteMinutes(antiSpamerConfig.getInt("mute_minutes"));
+                antiSpamer.setMuteMsg(antiSpamerConfig.getString("mute_msg"));
+            }
+
+            // 设置群昵称检查者
+            if (!groupNickCheckerConfig.isEmpty()) {
+                groupNickChecker = new GroupNickChecker();
+                groupNickChecker.setBlackKeywords(groupNickCheckerConfig.getStringList("black_keywords"));
+                groupNickChecker.setWithdraw(groupNickCheckerConfig.getBoolean("withdraw"));
+                groupNickChecker.setMuteMinutes(groupNickCheckerConfig.getInt("mute_minutes"));
+                groupNickChecker.setPunishMsg(groupNickCheckerConfig.getString("punish_msg"));
+            }
+
+            // 应用到group中
+            group.setGroupID(groupConfig.getLong("group_id"));
             group.setAutoAcceptJoinRequest(groupConfig.getBoolean("auto_accept_join_request"));
             group.setJoinMsg(groupConfig.getString("join_msg"));
             group.setAntiSpamer(antiSpamer);
             group.setRegexFilters(regexFilters);
             group.setWhitelist(groupConfig.getLongList("whitelist"));
-            groups.put(group.getGroupId(), group);
+            group.setGroupNickChecker(groupNickChecker);
+
+            CQ.logDebug("qn", group.getGroupID() + "");
+            groups.put(group.getGroupID(), group);
         }
 
         settings.setGroups(groups);
@@ -109,21 +139,22 @@ public class CreeperCoolQBot extends JcqAppAbstract {
     }
 
     @Override
-    public int privateMsg(int subType, int msgId, long fromQQ, String msg, int font) {
-        functions.doAdminCommands(subType, msgId, fromQQ, msg, font);
+    public int privateMsg(int subType, int msgID, long fromQQ, String msg, int font) {
+        functions.doAdminCommands(subType, msgID, fromQQ, msg, font);
 
         return 0;
     }
 
     @Override
-    public int groupMsg(int subType, int msgId, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
-        functions.doAntiSpam(subType, msgId, fromGroup, fromQQ, fromAnonymous, msg, font);
-        functions.doRegexFilter(subType, msgId, fromGroup, fromQQ, fromAnonymous, msg, font);
+    public int groupMsg(int subType, int msgID, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
+        functions.doAntiSpamer(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font);
+        functions.doRegexFilter(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font);
+        functions.doGroupNickChecker(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font);
         return 0;
     }
 
     @Override
-    public int discussMsg(int subType, int msgId, long fromDiscuss, long fromQQ, String msg, int font) {
+    public int discussMsg(int subType, int msgID, long fromDiscuss, long fromQQ, String msg, int font) {
         return 0;
     }
 

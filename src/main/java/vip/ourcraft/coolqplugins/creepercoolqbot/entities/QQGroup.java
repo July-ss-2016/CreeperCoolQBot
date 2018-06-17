@@ -8,22 +8,31 @@ import java.util.List;
 /**
  * Created by July on 2018/05/26.
  */
-public class QqGroup {
-    private long groupId;
+public class QQGroup {
+    private long groupID;
     private boolean autoAcceptJoinRequest;
     private String joinMsg;
     private AntiSpamer antiSpamer;
     private List<Long> whitelist;
     private List<RegexFilter> regexFilters;
+    private GroupNickChecker groupNickChecker;
     private HashMap<Long, Long> memberLastGroupSpokeTimes;
     private HashMap<Long, Integer> spamBreakVls;
     // QQ, 禁言結束时间
     private HashMap<Long, Long> mutedMembers;
 
-    public QqGroup() {
+    public QQGroup() {
         this.memberLastGroupSpokeTimes = new HashMap<>();
         this.spamBreakVls = new HashMap<>();
         this.mutedMembers = new HashMap<>();
+    }
+
+    public GroupNickChecker getGroupNickChecker() {
+        return groupNickChecker;
+    }
+
+    public void setGroupNickChecker(GroupNickChecker groupNickChecker) {
+        this.groupNickChecker = groupNickChecker;
     }
 
     public List<Long> getWhitelist() {
@@ -42,12 +51,12 @@ public class QqGroup {
         this.autoAcceptJoinRequest = autoAcceptJoinRequest;
     }
 
-    public void setGroupId(long groupId) {
-        this.groupId = groupId;
+    public void setGroupID(long groupID) {
+        this.groupID = groupID;
     }
 
-    public long getGroupId() {
-        return groupId;
+    public long getGroupID() {
+        return groupID;
     }
 
     public String getJoinMsg() {
@@ -74,38 +83,38 @@ public class QqGroup {
         this.regexFilters = regexFilters;
     }
 
-    public void setMemberLastGroupSpokeTime(long qqId, long time) {
-        memberLastGroupSpokeTimes.put(qqId, time);
+    public void setMemberLastGroupSpokeTime(long qqID, long time) {
+        memberLastGroupSpokeTimes.put(qqID, time);
     }
 
-    public long getMemberLastGroupSpokeTime(long qqId) {
-        return memberLastGroupSpokeTimes.getOrDefault(qqId, 0L);
+    public long getMemberLastGroupSpokeTime(long qqID) {
+        return memberLastGroupSpokeTimes.getOrDefault(qqID, 0L);
     }
 
-    public void setSpamBreakVl(long qqId, int vl) {
+    public void setSpamBreakVl(long qqID, int vl) {
         if (vl == 0) {
-            spamBreakVls.remove(qqId);
+            spamBreakVls.remove(qqID);
             return;
         }
 
-        spamBreakVls.put(qqId, vl);
+        spamBreakVls.put(qqID, vl);
     }
 
-    public int getSpamBreakVl(long qqId) {
-        return spamBreakVls.getOrDefault(qqId, 0);
+    public int getSpamBreakVl(long qqID) {
+        return spamBreakVls.getOrDefault(qqID, 0);
     }
 
-    public void muteMember(long qqId, long seconds) {
-        mutedMembers.put(qqId, System.currentTimeMillis() + seconds * 1000);
-        JcqAppAbstract.CQ.setGroupBan(groupId, qqId, seconds);
+    public void muteMember(long qqID, long seconds) {
+        mutedMembers.put(qqID, System.currentTimeMillis() + seconds * 1000);
+        JcqAppAbstract.CQ.setGroupBan(groupID, qqID, seconds);
     }
 
-    public long getMemberMuteRemainingTime(long qqId) {
-        if (mutedMembers.containsKey(qqId)) {
-            long temp = (mutedMembers.get(qqId) - System.currentTimeMillis()) / 1000L;
+    public long getMemberMuteRemainingTime(long qqID) {
+        if (mutedMembers.containsKey(qqID)) {
+            long temp = (mutedMembers.get(qqID) - System.currentTimeMillis()) / 1000L;
 
             if (temp < 0L) {
-                mutedMembers.remove(qqId);
+                mutedMembers.remove(qqID);
                 return 0L;
             }
 

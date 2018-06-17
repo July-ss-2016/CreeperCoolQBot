@@ -1,9 +1,11 @@
 package vip.ourcraft.coolqplugins.creepercoolqbot;
 
 import com.sobte.cqp.jcq.entity.CoolQ;
+import com.sobte.cqp.jcq.entity.Member;
 import com.sobte.cqp.jcq.event.JcqAppAbstract;
 import vip.ourcraft.coolqplugins.creepercoolqbot.entities.AntiSpamer;
-import vip.ourcraft.coolqplugins.creepercoolqbot.entities.QqGroup;
+import vip.ourcraft.coolqplugins.creepercoolqbot.entities.GroupNickChecker;
+import vip.ourcraft.coolqplugins.creepercoolqbot.entities.QQGroup;
 import vip.ourcraft.coolqplugins.creepercoolqbot.entities.RegexFilter;
 
 import java.util.HashMap;
@@ -26,9 +28,9 @@ public class Functions {
         this.settings = plugin.getSettings();
     }
 
-    public void doAntiSpam(int subType, int msgId, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
+    public void doAntiSpamer(int subType, int msgID, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
         if (settings.getGroups().containsKey(fromGroup)) {
-            QqGroup group = settings.getGroups().get(fromGroup);
+            QQGroup group = settings.getGroups().get(fromGroup);
 
             if (group.getWhitelist() != null && group.getWhitelist().contains(fromQQ)) {
                 return;
@@ -36,7 +38,7 @@ public class Functions {
 
             AntiSpamer antiSpamer = group.getAntiSpamer();
 
-            if (antiSpamer.getIntervalThreshold() != -1) {
+            if (antiSpamer != null) {
                 if (System.currentTimeMillis() - group.getMemberLastGroupSpokeTime(fromQQ) < antiSpamer.getIntervalThreshold()) {
                     group.setSpamBreakVl(fromQQ, group.getSpamBreakVl(fromQQ) + 1);
                 } else {
@@ -67,9 +69,9 @@ public class Functions {
         }
     }
 
-    public void doRegexFilter(int subType, int msgId, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
+    public void doRegexFilter(int subType, int msgID, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
         if (settings.getGroups().containsKey(fromGroup)) {
-            QqGroup group = settings.getGroups().get(fromGroup);
+            QQGroup group = settings.getGroups().get(fromGroup);
 
             if (group.getWhitelist() != null && group.getWhitelist().contains(fromQQ)) {
                 return;
@@ -88,7 +90,7 @@ public class Functions {
                         group.muteMember(fromQQ, regexFilter.getMuteMinutes() * 60);
 
                         if (withdraw) {
-                            cq.deleteMsg(msgId);
+                            cq.deleteMsg(msgID);
                         }
 
                         if (!punishMsg.equals("")) {
@@ -106,7 +108,7 @@ public class Functions {
 
     public void doAddGroup(int subType, int sendTime, long fromGroup, long fromQQ, String msg, String responseFlag) {
         if (settings.getGroups().containsKey(fromGroup)) {
-            QqGroup group = settings.getGroups().get(fromGroup);
+            QQGroup group = settings.getGroups().get(fromGroup);
 
             if (group.isAutoAcceptJoinRequest()) {
                 String joinMsg = group.getJoinMsg();
@@ -131,10 +133,51 @@ public class Functions {
         }
     }
 
-    public void doAdminCommands(int subType, int msgId, long fromQQ, String msg, int font) {
-        if (fromQQ == settings.getOwnerQq() && Objects.equals(msg, "#ccqb reload")) {
+    public void doAdminCommands(int subType, int msgID, long fromQQ, String msg, int font) {
+        if (fromQQ == settings.getOwnerQQ() && Objects.equals(msg, "#ccqb reload")) {
             plugin.loadConfig();
             cq.sendPrivateMsg(fromQQ, "重载配置成功!");
+        }
+    }
+
+    public void doGroupNickChecker(int subType, int msgID, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
+        if (settings.getGroups().containsKey(fromGroup)) {
+            QQGroup group = settings.getGroups().get(fromGroup);
+
+            if (group.getWhitelist() != null && group.getWhitelist().contains(fromQQ)) {
+                return;
+            }
+
+            GroupNickChecker groupNickChecker = group.getGroupNickChecker();
+
+            for (String keyWord : groupNickChecker.getBlackKeywords()) {
+                Member member = cq.getGroupMemberInfoV2(fromGroup, fromQQ, true);
+
+                if (member == null) {
+                    return;
+                }
+
+                String groupNick = member.getCard();
+
+                if (groupNick != null && groupNick.contains(keyWord)) {
+                    boolean withdraw = groupNickChecker.isWithdraw();
+                    String punishMsg = groupNickChecker.getPunishMsg();
+
+                    group.muteMember(fromQQ, groupNickChecker.getMuteMinutes() * 60);
+
+                    if (withdraw) {
+                        cq.deleteMsg(msgID);
+                    }
+
+                    if (!punishMsg.equals("")) {
+                        cq.sendGroupMsg(fromGroup, punishMsg
+                                .replace("%punish_type%", withdraw ? "撤回&禁言" + groupNickChecker.getMuteMinutes() + "(分钟)" :  "禁言" + groupNickChecker.getMuteMinutes() + "(分钟)")
+                                .replace("%qq_name%", cq.getGroupMemberInfo(fromGroup, fromQQ, true).getNick())
+                                .replace("%qq_num%", String.valueOf(fromQQ))
+                        );
+                    }
+                }
+            }
         }
     }
 }

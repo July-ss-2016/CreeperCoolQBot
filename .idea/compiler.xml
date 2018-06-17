@@ -9,8 +9,8 @@
         <module name="CreeperCoolQBot" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="1.8">
-      <module name="CreeperCoolQBot" target="1.8" />
+    <bytecodeTargetLevel target="8">
+      <module name="CreeperCoolQBot" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>

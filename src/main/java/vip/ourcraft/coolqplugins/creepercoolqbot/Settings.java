@@ -1,6 +1,6 @@
 package vip.ourcraft.coolqplugins.creepercoolqbot;
 
-import vip.ourcraft.coolqplugins.creepercoolqbot.entities.QqGroup;
+import vip.ourcraft.coolqplugins.creepercoolqbot.entities.QQGroup;
 
 import java.util.HashMap;
 
@@ -9,15 +9,15 @@ import java.util.HashMap;
  */
 public class Settings {
     private String msgPrefix;
-    private long ownerQq;
-    private HashMap<Long, QqGroup> groups;
+    private long ownerQQ;
+    private HashMap<Long, QQGroup> groups;
 
-    public long getOwnerQq() {
-        return ownerQq;
+    public long getOwnerQQ() {
+        return ownerQQ;
     }
 
-    public void setOwnerQq(long ownerQq) {
-        this.ownerQq = ownerQq;
+    public void setOwnerQQ(long ownerQQ) {
+        this.ownerQQ = ownerQQ;
     }
 
     public String getMsgPrefix() {
@@ -28,11 +28,11 @@ public class Settings {
         this.msgPrefix = msgPrefix;
     }
 
-    public HashMap<Long, QqGroup> getGroups() {
+    public HashMap<Long, QQGroup> getGroups() {
         return groups;
     }
 
-    public void setGroups(HashMap<Long, QqGroup> groups) {
+    public void setGroups(HashMap<Long, QQGroup> groups) {
         this.groups = groups;
     }
 }
