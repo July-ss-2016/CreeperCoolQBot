@@ -14,21 +14,12 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../java_api/libs/coolq/jcq-coolq-1.2.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../java_api/libs/coolq/jcq-coolq-1.2.7.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$MODULE_DIR$/../../../java_api/libs/coolq/jcq-coolq-1.2.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../java_api/libs/coolq/jcq-coolq-1.2.7.jar!/" />
         </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../java_api/libs/http/commons-codec-1.9.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="library" name="Maven: com.typesafe:config:1.3.2" level="project" />

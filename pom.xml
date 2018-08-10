@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupID>groupID</groupID>
-    <artifactID>CreeperCoolQBot</artifactID>
+    <groupId>groupID</groupId>
+    <artifactId>CreeperCoolQBot</artifactId>
     <version>1.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
-            <groupID>com.typesafe</groupID>
-            <artifactID>config</artifactID>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
             <version>1.3.2</version>
         </dependency>
     </dependencies>

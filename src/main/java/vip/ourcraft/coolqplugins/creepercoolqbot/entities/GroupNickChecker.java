@@ -7,6 +7,15 @@ public class GroupNickChecker {
     private boolean withdraw;
     private int muteMinutes;
     private String punishMsg;
+    private boolean resetCard;
+
+    public boolean isResetCard() {
+        return resetCard;
+    }
+
+    public void setResetCard(boolean resetCard) {
+        this.resetCard = resetCard;
+    }
 
     public List<String> getBlackKeywords() {
         return blackKeywords;

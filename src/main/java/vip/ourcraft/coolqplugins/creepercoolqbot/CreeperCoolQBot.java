@@ -86,22 +86,23 @@ public class CreeperCoolQBot extends JcqAppAbstract {
             // 设置群昵称检查者
             if (!groupNickCheckerConfig.isEmpty()) {
                 groupNickChecker = new GroupNickChecker();
+
                 groupNickChecker.setBlackKeywords(groupNickCheckerConfig.getStringList("black_keywords"));
                 groupNickChecker.setWithdraw(groupNickCheckerConfig.getBoolean("withdraw"));
                 groupNickChecker.setMuteMinutes(groupNickCheckerConfig.getInt("mute_minutes"));
                 groupNickChecker.setPunishMsg(groupNickCheckerConfig.getString("punish_msg"));
+                groupNickChecker.setResetCard(groupNickCheckerConfig.getBoolean("reset_card"));
             }
 
             // 应用到group中
             group.setGroupID(groupConfig.getLong("group_id"));
             group.setAutoAcceptJoinRequest(groupConfig.getBoolean("auto_accept_join_request"));
             group.setJoinMsg(groupConfig.getString("join_msg"));
+            group.setKickMsg(groupConfig.getString("kick_msg"));
             group.setAntiSpamer(antiSpamer);
             group.setRegexFilters(regexFilters);
             group.setWhitelist(groupConfig.getLongList("whitelist"));
             group.setGroupNickChecker(groupNickChecker);
-
-            CQ.logDebug("qn", group.getGroupID() + "");
             groups.put(group.getGroupID(), group);
         }
 
@@ -109,47 +110,42 @@ public class CreeperCoolQBot extends JcqAppAbstract {
         return true;
     }
 
-    @Override
     public String appInfo() {
-        return "1.0.0,vip.ourcraft.coolqplugins.creepercoolqbot.CreeperCoolQBot";
+        return "1.0.1,vip.ourcraft.coolqplugins.creepercoolqbot";
     }
 
-    @Override
     public int startup() {
         this.settings = new Settings();
         this.functions = new Functions(this);
 
         loadConfig();
+        CQ.logInfo("CreeperCoolQBot", "初始化完毕!");
         return 0;
     }
 
-    @Override
     public int exit() {
         return 0;
     }
 
-    @Override
     public int enable() {
         return 0;
     }
 
-    @Override
     public int disable() {
         return 0;
     }
 
-    @Override
     public int privateMsg(int subType, int msgID, long fromQQ, String msg, int font) {
-        functions.doAdminCommands(subType, msgID, fromQQ, msg, font);
-
-        return 0;
+        return functions.doAdminCommands(subType, msgID, fromQQ, msg, font);
     }
 
-    @Override
     public int groupMsg(int subType, int msgID, long fromGroup, long fromQQ, String fromAnonymous, String msg, int font) {
-        functions.doAntiSpamer(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font);
-        functions.doRegexFilter(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font);
-        functions.doGroupNickChecker(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font);
+        if (functions.doAntiSpamer(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font) == 1
+                | functions.doRegexFilter(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font) == 1
+                | functions.doGroupNickChecker(subType, msgID, fromGroup, fromQQ, fromAnonymous, msg, font) == 1) {
+            return 1;
+        }
+
         return 0;
     }
 
@@ -170,7 +166,7 @@ public class CreeperCoolQBot extends JcqAppAbstract {
 
     @Override
     public int groupMemberDecrease(int subType, int sendTime, long fromGroup, long fromQQ, long beingOperateQQ) {
-        return 0;
+        return functions.doMemberKickMsg(subType, sendTime, fromGroup, fromQQ, beingOperateQQ);
     }
 
     @Override
@@ -191,7 +187,6 @@ public class CreeperCoolQBot extends JcqAppAbstract {
 
     @Override
     public int requestAddGroup(int subType, int sendTime, long fromGroup, long fromQQ, String msg, String responseFlag) {
-        functions.doAddGroup(subType, sendTime, fromGroup, fromQQ, msg, responseFlag);
-        return 0;
+        return functions.doAddGroupMsgAndRemute(subType, sendTime, fromGroup, fromQQ, msg, responseFlag);
     }
 }

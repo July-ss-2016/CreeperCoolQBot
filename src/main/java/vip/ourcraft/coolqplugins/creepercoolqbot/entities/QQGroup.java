@@ -12,6 +12,7 @@ public class QQGroup {
     private long groupID;
     private boolean autoAcceptJoinRequest;
     private String joinMsg;
+    private String kickMsg;
     private AntiSpamer antiSpamer;
     private List<Long> whitelist;
     private List<RegexFilter> regexFilters;
@@ -122,5 +123,13 @@ public class QQGroup {
         }
 
         return 0L;
+    }
+
+    public String getKickMsg() {
+        return kickMsg;
+    }
+
+    public void setKickMsg(String kickMsg) {
+        this.kickMsg = kickMsg;
     }
 }
